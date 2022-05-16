@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>고양이 가라사대</title>
+  </head>
+  <style>
+    body {
+      text-align: center;
+    }
+    .main-card button {
+      position: relative;
+      left: -45px;
+      bottom: 15px;
+    }
+    .favorites {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    /* .favorites img {
+      width: 150px; 리액트에서 스타일링 하는 방법으로 다시 표현함 html 80 
+    } */
+  </style>
+  <body>
+    <!-- 이미지 li를 담을 공간 -->
+    <div id="app"></div>
+
+    <script
+      src="https://unpkg.com/react@17/umd/react.development.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"
+      crossorigin
+    ></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- 바벨추가 -->
+    <!-- js에  html 태그 작성시 나오는 <> 를 읽을 수 없다는  오류를 없앰 -->
+    <script type="text/babel">
+      const jsonLocalStorage = {
+        setItem: (key, value) => {
+          localStorage.setItem(key, JSON.stringify(value));
+        },
+        getItem: (key) => {
+          return JSON.parse(localStorage.getItem(key));
+        },
+      };
+
+      // const title = <h1>1번째 고양이 가라사대</h1>;
+      // title 엘리먼트 >컴포넌트화
+      const Title = (props) => {
+        return <h1>{props.children}</h1>;
+      };
+
+      // const form = (
+      //   <form>
+      //     <input
+      //       type="text"
+      //       name="name"
+      //       placeholder="영어 대사를 입력해주세요"
+      //     />
+      //     <button type="submit">생성</button>
+      //   </form>
+      // );
+      // form 엘리먼트 >컴포넌트화
+      const Form = ({ updateMainCat }) => {
+        const includesHangul = (text) => /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/i.test(text);
+        const [value, setValue] = React.useState("");
+        const [errorMessage, setErrorMessage] = React.useState("");
+
+        function handleInputChange(e) {
+          const userValue = e.target.value;
+          setErrorMessage("");
+          if (includesHangul(userValue)) {
+            setErrorMessage("한글은 입력할 수 없습니다.");
+          }
+          setValue(userValue.toUpperCase());
+        }
+        function handleFormSubmit(e) {
+          e.preventDefault();
+          setErrorMessage("");
+          if (value === "") {
+            setErrorMessage("빈 값은 입력할 수 없습니다.");
+            return;
+          }
+          updateMainCat();
+        }
+        // counterState를 2개의 구조로 나눌꺼임
+        // const counter = counterState[0];
+        // const setCounter = counterState[1];
+        // counter 는 counterState 의 0번째 인덱스로 받고
+        // setcounter 는 counterState 의 1번째 인덱스를 받는다
+        // 이렇게 2개를 쓸수도 있지만 좀 더 깔끔한 코드는 합쳐서 {0 , 1} 로 작성 가능
+
+        // Form 에서 handleFormSubmit이 없으니까 props 로 받아오는거임
+        return (
+          <form onSubmit={handleFormSubmit}>
+            <input
+              type="text"
+              name="name"
+              placeholder="영어 대사를 입력해주세요"
+              value={value}
+              onChange={handleInputChange}
+            />
+            <button type="submit">생성</button>
+            <p style={{ color: "red" }}>{errorMessage}</p>
+          </form>
+        );
+      };
+
+      function CatItem(props) {
+        return (
+          <li>
+            <img src={props.img} style={{ width: "150px" }}></img>
+          </li>
+        );
+        // cat1, cat2 의 각각의 사진을 받아보여줌 , 인자를 통해서
+        // CatItem 을 통해 이미지를 다르게 넘기는 것 만으로도 일관적이게 코드를 재사용할 수 있게 된다.
+      }
+
+      // const favorites = (
+      //   <ul class="favorites">
+      //     <CatItem img="https://cataas.com//cat/5e9970351b7a400011744233/says/inflearn" />
+      //     <CatItem img="https://cataas.com/cat/595f280b557291a9750ebf65/says/JavaScript" />{" "}
+      //   </ul>
+      //   일단 이미지를 넘겨받았음 , CatItem 에서 인자로 받아서 보여줘야함
+      //   리액트에서 인자를 받는것을 props 라고함
+      // );
+
+      function Favorites({ favorites }) {
+        return (
+          <ul className="favorites">
+            {favorites.map((cat) => (
+              <CatItem img={cat} key={cat} />
+            ))}
+          </ul>
+          // 여기서 key = {cat} 키 값을 넣어주는건 키 값이 있어야 리액트에서 최적화를 잘해서 보여주기때문이다
+        );
+        // 위의 favorites 를 엘리먼트 >컴포넌트화
+      }
+
+      // 자바스크립트 변수를 리액트 문법안에서 쓰는 법은 {중괄호임}
+      // const mainCard = (
+      //   <div class="main-card">
+      //     <img
+      //       src="https://cataas.com/cat/60b73094e04e18001194a309/says/react"
+      //       alt="고양이"
+      //       width="400"
+      //     />
+      //     <button>🤍</button>
+      //   </div>
+      // );
+      // MainCard 엘리먼트 >컴포넌트화
+      const MainCard = ({ img, onHeartClick }) => {
+        return (
+          <div className="main-card">
+            <img src={img} alt="고양이" width="400" />
+            <button onClick={onHeartClick}>🤍</button>
+          </div>
+        );
+      };
+      // 리액트에 jsx 에서는 onClick 으로 대문자를 써줘야함
+      // 여기서 Props 를 안쓰고 오브젝트로 바로 쓸 수도 있음
+      // const MainCard = ({ img }) => (
+      // 오브젝트로 풀어버릴 수도 있음
+      // <img src = {img} />
+
+      // app 의 컴포넌트화
+      const App = () => {
+        const CAT1 =
+          "https://cataas.com/cat/60b73094e04e18001194a309/says/react";
+        const CAT2 =
+          "https://cataas.com//cat/5e9970351b7a400011744233/says/inflearn";
+        const CAT3 =
+          "https://cataas.com/cat/595f280b557291a9750ebf65/says/JavaScript";
+
+        const [counter, setCounter] = React.useState(
+          jsonLocalStorage.getItem("counter")
+          // 로컬 스토리지는 스트링으로 전달하기때문에 +1 을 하게되면 1을 붙여서 나오니까 Number 를 숫자 1이 오르게 해줌
+        ); // 1은 state의 초기값임
+        const [mainCat, setMainCat] = React.useState(CAT1);
+        const [favorites, setFavorites] = React.useState(
+          jsonLocalStorage.getItem("favorites") || []
+          // favorites localStorage 가 null 값일때 []빈배열로 초기화를 해줘라
+        );
+        // favorites 스테이트를 추가 , 초기값은 CAT1 CAT2 임
+
+        function updateMainCat() {
+          // formSubmit 에 첫번째 인자로 event 가 들어오고
+          // form 의 기본값을 event.preventDefault();으로 막는다
+          setMainCat(CAT2);
+          const nextCounter = counter + 1;
+          setCounter(nextCounter);
+          jsonLocalStorage.setItem("counter", nextCounter);
+        }
+        function handleHeartClick() {
+          const nextFavorites = [...favorites, mainCat];
+          setFavorites(nextFavorites);
+          jsonLocalStorage.setItem("favorites", nextFavorites);
+          // 위 문법은 기존에 있는 favorites 배열 초기값이 CAT1,CAT2을 펼쳐서 쓰고 CAT3를 그 뒤에 추가한다.
+          // 그럼 위 배열안에 CAT1 CAT2 CAT3가 저장이 되는거임
+        }
+        return (
+          <div>
+            <Title>{counter}번째 고양이 가라사대</Title>
+            <Form updateMainCat={updateMainCat} />
+            <MainCard img={mainCat} onHeartClick={handleHeartClick} />
+            <Favorites favorites={favorites} />
+          </div>
+          // MainCard 에서 하트를 눌렀을 때 handleHeartClick 을 불러주는데 얘가 원래
+          // MainCard 내부에 있었는데 상위에서도 handleHeartClick 을 공유하기 위헤서 함수를 한 단계 올려줌
+          // 그래서 하트클릭을 하면 favorites 배열에 기존 초기값이 CAT3 를 더해서 favorites에 저장한거임
+        );
+      };
+      const 여기다가그려 = document.querySelector("#app");
+      ReactDOM.render(<App />, 여기다가그려);
+      // const app = (
+      //   내용으로 넘긴걸 props로 접근하는 방법 <Title>1번째 고양이 가라사대</Title> 이게 내용으로 넘기는거임
+      //   태그 안에다 적는 내용은 children 이라는 이름으로 넘어온다
+      //   그러니 접근 할땐 props.children 으로 접근하면 된다.
+      //   <div>
+      //     <Title>1번째 고양이 가라사대</Title>
+      //     <Form />
+      //     <MainCard img="https://cataas.com/cat/60b73094e04e18001194a309/says/react" />
+      //     <Favorites />
+      //   </div>
+      //   <Favorites /> 컴포넌트 태그 방식
+      // );
+      // app 를 인자로 받게되는 경우 최상위 태그가 하나여야하는데
+      // 묶어주지 않으면 2개가 되기때문에 하나로 묶어줘야한다.
+    </script>
+  </body>
+</html>
